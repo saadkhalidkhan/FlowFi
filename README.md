@@ -3,7 +3,6 @@
 [![CI](https://github.com/saadkhalidkhan/FlowFi/actions/workflows/ci.yml/badge.svg)](https://github.com/saadkhalidkhan/FlowFi/actions/workflows/ci.yml)
 [![Docs](https://github.com/saadkhalidkhan/FlowFi/actions/workflows/docs.yml/badge.svg)](https://github.com/saadkhalidkhan/FlowFi/actions/workflows/docs.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.saadkhalidkhan/flowfi-core?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.saadkhalidkhan/flowfi-core)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/saadkhalidkhan/FlowFi/releases)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
 [![minSdk](https://img.shields.io/badge/minSdk-26-green)](app/build.gradle.kts)
@@ -34,8 +33,6 @@ Watch the full walkthrough: **[flowfidemo.webm](docs/media/flowfidemo.webm)** (W
 
 ## Installation
 
-### Run the app from source
-
 **Requirements:** Android Studio Ladybug or newer, JDK 17+, Android SDK 36
 
 ```bash
@@ -50,29 +47,6 @@ Install on a device or emulator:
 ./gradlew :app:installDebug
 adb shell am start -n com.example.flowfi/.MainActivity
 ```
-
-### Use the published library (`flowfi-core`)
-
-Add Maven Central and the dependency:
-
-```kotlin
-// settings.gradle.kts
-dependencyResolutionManagement {
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
-```
-
-```kotlin
-// app/build.gradle.kts
-dependencies {
-    implementation("io.github.saadkhalidkhan:flowfi-core:1.0.0")
-}
-```
-
-> Publishing requires [Sonatype Central](https://central.sonatype.com/) credentials and GPG signing. See [Publishing](#publishing) and `gradle/publishing.properties.example`.
 
 ## Usage examples
 
@@ -127,10 +101,10 @@ class FlowFiApplication : Application() {
 API reference is generated with [Dokka](https://kotlinlang.org/docs/dokka-introduction.html):
 
 ```bash
-./gradlew :flowfi-core:dokkaGeneratePublicationHtml
+./gradlew :app:dokkaGeneratePublicationHtml
 ```
 
-Output: `flowfi-core/build/dokka/html/`
+Output: `app/build/dokka/html/`
 
 Published docs (GitHub Pages): **https://saadkhalidkhan.github.io/FlowFi/** (after the Docs workflow runs on `main`).
 
@@ -138,12 +112,11 @@ Published docs (GitHub Pages): **https://saadkhalidkhan.github.io/FlowFi/** (aft
 
 ```
 FlowFi/
-├── app/                 # Compose UI, navigation, ViewModel
-├── flowfi-core/         # Room entities, DAO, database, repository (Maven artifact)
+├── app/                 # UI, ViewModel, Room data layer
 ├── docs/
 │   ├── images/          # Screenshots
 │   └── media/           # Demo video
-└── .github/workflows/   # CI, docs, release publishing
+└── .github/workflows/   # CI and docs
 ```
 
 ## Tech stack
@@ -156,29 +129,11 @@ FlowFi/
 | Async | Kotlin Coroutines, StateFlow |
 | Navigation | Navigation Compose |
 
-## Publishing
-
-1. Register namespace `io.github.saadkhalidkhan` on [Maven Central](https://central.sonatype.com/).
-2. Add GitHub repository secrets (see `gradle/publishing.properties.example`):
-   - `MAVEN_CENTRAL_USERNAME`
-   - `MAVEN_CENTRAL_PASSWORD`
-   - `SIGNING_IN_MEMORY_KEY`
-   - `SIGNING_IN_MEMORY_KEY_PASSWORD`
-3. Create a release tag:
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-The [Release](.github/workflows/release.yml) workflow publishes `io.github.saadkhalidkhan:flowfi-core` to Maven Central.
-
 ## Development
 
 ```bash
-./gradlew testDebugUnitTest          # Unit tests
-./gradlew :app:assembleDebug          # Debug APK
-./gradlew :flowfi-core:assembleRelease
+./gradlew testDebugUnitTest   # Unit tests
+./gradlew :app:assembleDebug   # Debug APK
 ```
 
 ## License

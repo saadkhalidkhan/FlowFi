@@ -33,7 +33,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run unit tests
-        run: ./gradlew :app:testDebugUnitTest :flowfi-core:assembleRelease --stacktrace
+        run: ./gradlew :app:testDebugUnitTest --stacktrace
 
       - name: Assemble debug APK
         run: ./gradlew :app:assembleDebug --stacktrace

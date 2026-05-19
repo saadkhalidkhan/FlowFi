@@ -24,5 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "FlowFi"
 include(":app")
-include(":flowfi-core")
  

@@ -37,12 +37,12 @@ jobs:
         run: chmod +x gradlew
 
       - name: Generate Dokka HTML
-        run: ./gradlew :flowfi-core:dokkaGeneratePublicationHtml --stacktrace
+        run: ./gradlew :app:dokkaGeneratePublicationHtml --stacktrace
 
       - name: Upload Dokka site artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: flowfi-core/build/dokka/html
+          path: app/build/dokka/html
 
   deploy:
     needs: dokka

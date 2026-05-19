@@ -50,13 +50,6 @@ Thumbs.db
 # Logs
 *.log
 
-# Signing & publishing secrets (never commit)
-signing.properties
-publish.properties
-release.properties
-*.gpg
-secring.*
-
 # Dokka output (generated in CI; optional local)
 **/build/dokka/
 
