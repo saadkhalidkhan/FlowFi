@@ -106,7 +106,10 @@ API reference is generated with [Dokka](https://kotlinlang.org/docs/dokka-introd
 
 Output: `app/build/dokka/html/`
 
-Published docs (GitHub Pages): **https://saadkhalidkhan.github.io/FlowFi/** (after the Docs workflow runs on `main`).
+Published docs (GitHub Pages): **https://saadkhalidkhan.github.io/FlowFi/**
+
+> First-time setup: enable Pages under **Settings → Pages → Build and deployment → Source: GitHub Actions**, or run  
+> `gh api -X POST repos/saadkhalidkhan/FlowFi/pages -f build_type=workflow`
 
 ## Project structure
 
