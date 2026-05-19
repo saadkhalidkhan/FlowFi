@@ -13,16 +13,25 @@ A fast, Material 3 personal finance app for tracking income and expenses. Built 
 
 ## Demo
 
-Watch the full walkthrough: **[flowfidemo.webm](docs/media/flowfidemo.webm)** (WebM, ~6 MB)
+<p align="center">
+  <img src="docs/media/flowfidemo.gif" alt="FlowFi app demo" width="400" />
+</p>
 
-> **Tip:** Open the video in a browser or Android Studio device preview. To create a GIF locally:  
-> `ffmpeg -i docs/media/flowfidemo.webm -vf "fps=8,scale=400:-1" -t 15 docs/media/flowfidemo.gif`
+<p align="center">
+  <sub>Also available as <a href="docs/media/flowfidemo.webm">flowfidemo.webm</a> (higher quality)</sub>
+</p>
 
 ## Screenshots
 
-| Dashboard | Add / Edit | View All |
-|:---:|:---:|:---:|
-| ![Dashboard](docs/images/dashboard.png) | ![Add transaction](docs/images/add_edit.png) | ![All transactions](docs/images/view_all.png) |
+<p align="center">
+  <img src="docs/images/dashboard.png" alt="Dashboard" width="260" />
+  <img src="docs/images/add_edit.png" alt="Add transaction" width="260" />
+  <img src="docs/images/view_all.png" alt="All transactions" width="260" />
+</p>
+
+<p align="center">
+  <sub>Dashboard · Add / Edit · View All</sub>
+</p>
 
 ## Features
 
