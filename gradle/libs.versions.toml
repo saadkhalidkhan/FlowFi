@@ -36,6 +36,8 @@ moshiKotlinCodegen = "1.15.2"
 datastorePreferences = "1.1.7"
 material = "1.14.0-alpha06"
 robolectric = "4.14.1"
+dokka = "2.0.0"
+mavenPublish = "0.36.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -84,6 +86,9 @@ robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "googleDevtoolsKsp" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }

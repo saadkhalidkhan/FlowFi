@@ -1,0 +1,8 @@
+# Copy to ~/.gradle/gradle.properties or set as GitHub Actions secrets.
+# Maven Central (Sonatype Central Portal): https://central.sonatype.com/
+mavenCentralUsername=your-central-portal-username
+mavenCentralPassword=your-central-portal-token
+
+# GPG signing (armored private key, one line or base64)
+signingInMemoryKey=-----BEGIN PGP PRIVATE KEY BLOCK-----\n...
+signingInMemoryKeyPassword=your-key-password
