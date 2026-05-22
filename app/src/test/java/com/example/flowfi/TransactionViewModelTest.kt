@@ -16,6 +16,11 @@ class TransactionViewModelTest {
     }
 
     @Test
+    fun currencyPrefix_isNotBlank() {
+        assertTrue(com.example.flowfi.ui.util.currencyPrefix().isNotBlank())
+    }
+
+    @Test
     fun isValidAmountInput_rejectsInvalidPatterns() {
         assertTrue(com.example.flowfi.ui.util.isValidAmountInput("12.50"))
         assertTrue(com.example.flowfi.ui.util.isValidAmountInput(""))

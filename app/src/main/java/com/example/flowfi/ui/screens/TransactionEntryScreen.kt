@@ -14,6 +14,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.flowfi.data.entity.TransactionEntity
 import com.example.flowfi.data.entity.TransactionType
+import com.example.flowfi.ui.util.currencyPrefix
 import com.example.flowfi.ui.util.isValidAmountInput
 import com.example.flowfi.viewmodel.TransactionViewModel
 
@@ -115,7 +116,7 @@ fun TransactionEntryScreen(
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
-                prefix = { Text("$ ") },
+                prefix = { Text("${currencyPrefix()} ") },
                 supportingText = {
                     if (amount.isNotEmpty() && !canSave) {
                         Text("Enter an amount greater than 0")
