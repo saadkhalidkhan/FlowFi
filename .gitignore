@@ -55,6 +55,7 @@ Thumbs.db
 
 # Agent / local tooling
 .agent/
+.github/issue-bodies/
 
 # Fastlane
 fastlane/report.xml
