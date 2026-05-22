@@ -1,7 +1,6 @@
 package com.example.flowfi.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,9 +23,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.flowfi.data.entity.TransactionEntity
 import com.example.flowfi.data.entity.TransactionType
+import com.example.flowfi.ui.util.formatCurrency
+import com.example.flowfi.ui.util.formatTransactionDate
 import com.example.flowfi.viewmodel.TransactionViewModel
-import java.text.NumberFormat
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -96,7 +95,7 @@ fun DashboardScreen(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                if (uiState.transactions.isNotEmpty()) {
+                if (uiState.allTransactions.isNotEmpty()) {
                     TextButton(onClick = onNavigateToList) {
                         Text("View All")
                         Icon(Icons.Default.ChevronRight, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -106,17 +105,20 @@ fun DashboardScreen(
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            if (uiState.transactions.isEmpty()) {
+            if (uiState.monthlyTransactions.isEmpty()) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("No transactions yet", style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
+                    Text("No transactions this month", style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
                 }
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    items(uiState.transactions.take(5)) { transaction ->
-                        TransactionItem(transaction = transaction)
+                    items(uiState.monthlyTransactions.take(5)) { transaction ->
+                        TransactionItem(
+                            transaction = transaction,
+                            formattedDate = formatTransactionDate(transaction.date)
+                        )
                     }
                 }
             }
@@ -152,7 +154,7 @@ fun SummaryCard(balance: Double, income: Double, expenses: Double) {
             modifier = Modifier.padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Total Balance", style = MaterialTheme.typography.labelLarge)
+            Text("Total Balance (This Month)", style = MaterialTheme.typography.labelLarge)
             Text(
                 text = formatCurrency(balance),
                 style = MaterialTheme.typography.displayMedium,
@@ -186,54 +188,60 @@ fun SummaryItem(label: String, amount: Double, icon: ImageVector, color: Color) 
 }
 
 @Composable
-fun TransactionItem(transaction: TransactionEntity) {
+fun TransactionItem(
+    transaction: TransactionEntity,
+    formattedDate: String? = null
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(
-                            color = if (transaction.type == TransactionType.INCOME) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
-                            shape = RoundedCornerShape(12.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (transaction.type == TransactionType.INCOME) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
-                        contentDescription = null,
-                        tint = if (transaction.type == TransactionType.INCOME) Color(0xFF4CAF50) else Color(0xFFF44336),
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(transaction.category, fontWeight = FontWeight.Bold)
-                    if (transaction.note.isNotEmpty()) {
-                        Text(transaction.note, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                color = if (transaction.type == TransactionType.INCOME) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
+                                shape = RoundedCornerShape(12.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (transaction.type == TransactionType.INCOME) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
+                            contentDescription = null,
+                            tint = if (transaction.type == TransactionType.INCOME) Color(0xFF4CAF50) else Color(0xFFF44336),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(transaction.category, fontWeight = FontWeight.Bold)
+                        if (transaction.note.isNotEmpty()) {
+                            Text(transaction.note, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        }
                     }
                 }
+                Text(
+                    text = (if (transaction.type == TransactionType.INCOME) "+" else "-") + formatCurrency(transaction.amount),
+                    fontWeight = FontWeight.ExtraBold,
+                    color = if (transaction.type == TransactionType.INCOME) Color(0xFF4CAF50) else Color(0xFFF44336)
+                )
             }
-            Text(
-                text = (if (transaction.type == TransactionType.INCOME) "+" else "-") + formatCurrency(transaction.amount),
-                fontWeight = FontWeight.ExtraBold,
-                color = if (transaction.type == TransactionType.INCOME) Color(0xFF4CAF50) else Color(0xFFF44336)
-            )
+            if (formattedDate != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = formattedDate,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                )
+            }
         }
     }
-}
-
-fun formatCurrency(amount: Double): String {
-    val format = NumberFormat.getCurrencyInstance(Locale.US)
-    return format.format(amount)
 }

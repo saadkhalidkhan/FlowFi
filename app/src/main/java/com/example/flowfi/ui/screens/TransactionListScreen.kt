@@ -1,20 +1,23 @@
 package com.example.flowfi.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.flowfi.ui.util.formatTransactionDate
 import com.example.flowfi.viewmodel.TransactionViewModel
-import java.text.SimpleDateFormat
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,7 +26,6 @@ fun TransactionListScreen(
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val dateFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
 
     Scaffold(
         topBar = {
@@ -37,34 +39,69 @@ fun TransactionListScreen(
             )
         }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
-        ) {
-            items(uiState.transactions) { transaction ->
-                TransactionItemWithDate(
-                    transaction = transaction,
-                    formattedDate = dateFormatter.format(Date(transaction.date))
+        if (uiState.allTransactions.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No transactions yet",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(vertical = 16.dp)
+            ) {
+                items(
+                    items = uiState.allTransactions,
+                    key = { it.id }
+                ) { transaction ->
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        confirmValueChange = { value ->
+                            if (value == SwipeToDismissBoxValue.EndToStart) {
+                                viewModel.deleteTransaction(transaction)
+                                true
+                            } else {
+                                false
+                            }
+                        }
+                    )
+
+                    SwipeToDismissBox(
+                        state = dismissState,
+                        enableDismissFromStartToEnd = false,
+                        backgroundContent = {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color(0xFFF44336), MaterialTheme.shapes.large)
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = Alignment.CenterEnd
+                            ) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Delete",
+                                    tint = Color.White
+                                )
+                            }
+                        }
+                    ) {
+                        TransactionItem(
+                            transaction = transaction,
+                            formattedDate = formatTransactionDate(transaction.date)
+                        )
+                    }
+                }
             }
         }
     }
-}
-
-@Composable
-fun TransactionItemWithDate(
-    transaction: com.example.flowfi.data.entity.TransactionEntity,
-    formattedDate: String
-) {
-    TransactionItem(transaction = transaction)
-    Text(
-        text = formattedDate,
-        style = MaterialTheme.typography.labelSmall,
-        modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-    )
 }

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.flowfi.data.entity.TransactionEntity
 import com.example.flowfi.data.entity.TransactionType
 import com.example.flowfi.data.repository.TransactionRepository
+import com.example.flowfi.util.DateUtils
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -12,7 +13,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 data class TransactionUiState(
-    val transactions: List<TransactionEntity> = emptyList(),
+    val allTransactions: List<TransactionEntity> = emptyList(),
+    val monthlyTransactions: List<TransactionEntity> = emptyList(),
     val totalIncome: Double = 0.0,
     val totalExpenses: Double = 0.0,
     val balance: Double = 0.0,
@@ -22,15 +24,18 @@ data class TransactionUiState(
 class TransactionViewModel(private val repository: TransactionRepository) : ViewModel() {
 
     val uiState: StateFlow<TransactionUiState> = repository.getAllTransactions()
-        .map { transactions ->
-            val income = transactions.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
-            val expenses = transactions.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
+        .map { all ->
+            val monthRange = DateUtils.currentMonthRangeMillis()
+            val monthly = all.filter { it.date in monthRange }
+            val income = monthly.filter { it.type == TransactionType.INCOME }.sumOf { it.amount }
+            val expenses = monthly.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount }
             TransactionUiState(
-                transactions = transactions,
+                allTransactions = all,
+                monthlyTransactions = monthly,
                 totalIncome = income,
                 totalExpenses = expenses,
                 balance = income - expenses,
-                insights = generateInsights(transactions, income, expenses)
+                insights = generateInsights(monthly, income, expenses)
             )
         }.stateIn(
             scope = viewModelScope,
@@ -64,11 +69,11 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
         val insights = mutableListOf<String>()
 
         if (transactions.isEmpty()) {
-            return listOf("No transactions yet. Start tracking to see insights!")
+            return listOf("No transactions this month yet. Start tracking to see insights!")
         }
 
         if (income == 0.0) {
-            insights.add("No income recorded yet. Try to add your earnings!")
+            insights.add("No income recorded this month. Try to add your earnings!")
         }
 
         if (expenses > income && income > 0) {
@@ -79,17 +84,17 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
         if (income > 0 && (savings / income) < 0.10) {
             insights.add("Tip: Your savings are below 10% of your income. Try to save more!")
         }
-        
+
         if (income > 0 && (savings / income) > 0.20) {
-            insights.add("Great job! You've saved more than 20% of your income.")
+            insights.add("Great job! You've saved more than 20% of your income this month.")
         }
 
         val foodExpenses = transactions
             .filter { it.type == TransactionType.EXPENSE && it.category.equals("Food", ignoreCase = true) }
             .sumOf { it.amount }
-        
+
         if (expenses > 0 && (foodExpenses / expenses) > 0.30) {
-            insights.add("Alert: Food spending is over 30% of your total expenses.")
+            insights.add("Alert: Food spending is over 30% of your total expenses this month.")
         }
 
         return insights.take(3)

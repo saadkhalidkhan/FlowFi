@@ -14,7 +14,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.flowfi.data.entity.TransactionEntity
 import com.example.flowfi.data.entity.TransactionType
+import com.example.flowfi.ui.util.isValidAmountInput
 import com.example.flowfi.viewmodel.TransactionViewModel
+
+private val expenseCategories = listOf("Food", "Transport", "Bills", "Shopping", "Other")
+private val incomeCategories = listOf("Salary", "Other")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,12 +27,21 @@ fun TransactionEntryScreen(
     onNavigateBack: () -> Unit
 ) {
     var amount by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf("Food") }
+    var selectedCategory by remember { mutableStateOf(expenseCategories.first()) }
     var type by remember { mutableStateOf(TransactionType.EXPENSE) }
     var note by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
 
-    val categories = listOf("Food", "Transport", "Bills", "Shopping", "Salary", "Other")
+    val categories = if (type == TransactionType.EXPENSE) expenseCategories else incomeCategories
+
+    LaunchedEffect(type) {
+        if (selectedCategory !in categories) {
+            selectedCategory = categories.first()
+        }
+    }
+
+    val amountValue = amount.toDoubleOrNull()
+    val canSave = amountValue != null && amountValue > 0
 
     Scaffold(
         topBar = {
@@ -40,17 +53,44 @@ fun TransactionEntryScreen(
                     }
                 }
             )
+        },
+        bottomBar = {
+            Surface(tonalElevation = 3.dp) {
+                Button(
+                    onClick = {
+                        viewModel.addTransaction(
+                            TransactionEntity(
+                                amount = amountValue!!,
+                                category = selectedCategory,
+                                date = System.currentTimeMillis(),
+                                type = type,
+                                note = note.trim()
+                            )
+                        )
+                        onNavigateBack()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .height(56.dp),
+                    shape = MaterialTheme.shapes.large,
+                    enabled = canSave
+                ) {
+                    Text("Save Transaction", style = MaterialTheme.typography.titleMedium)
+                }
+            }
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Type Selector
+            Spacer(modifier = Modifier.height(8.dp))
+
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                 SegmentedButton(
                     selected = type == TransactionType.EXPENSE,
@@ -70,15 +110,20 @@ fun TransactionEntryScreen(
 
             OutlinedTextField(
                 value = amount,
-                onValueChange = { if (it.isEmpty() || it.toDoubleOrNull() != null) amount = it },
+                onValueChange = { if (isValidAmountInput(it)) amount = it },
                 label = { Text("Amount") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
-                prefix = { Text("$ ") }
+                prefix = { Text("$ ") },
+                supportingText = {
+                    if (amount.isNotEmpty() && !canSave) {
+                        Text("Enter an amount greater than 0")
+                    }
+                },
+                isError = amount.isNotEmpty() && !canSave
             )
 
-            // Category Dropdown
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded },
@@ -90,7 +135,7 @@ fun TransactionEntryScreen(
                     readOnly = true,
                     label = { Text("Category") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.menuAnchor(),
+                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
                     colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
                 )
                 ExposedDropdownMenu(
@@ -117,32 +162,7 @@ fun TransactionEntryScreen(
                 minLines = 3
             )
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            Button(
-                onClick = {
-                    val amountDouble = amount.toDoubleOrNull() ?: 0.0
-                    if (amountDouble > 0) {
-                        viewModel.addTransaction(
-                            TransactionEntity(
-                                amount = amountDouble,
-                                category = selectedCategory,
-                                date = System.currentTimeMillis(),
-                                type = type,
-                                note = note
-                            )
-                        )
-                        onNavigateBack()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = MaterialTheme.shapes.large,
-                enabled = amount.isNotEmpty()
-            ) {
-                Text("Save Transaction", style = MaterialTheme.typography.titleMedium)
-            }
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
