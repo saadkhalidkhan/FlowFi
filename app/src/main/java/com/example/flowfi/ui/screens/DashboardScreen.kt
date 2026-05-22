@@ -112,7 +112,8 @@ fun DashboardScreen(
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(bottom = 88.dp)
                 ) {
                     items(uiState.monthlyTransactions.take(5)) { transaction ->
                         TransactionItem(

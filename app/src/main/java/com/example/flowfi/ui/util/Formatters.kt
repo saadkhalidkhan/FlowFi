@@ -5,8 +5,14 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-fun formatCurrency(amount: Double): String {
-    return NumberFormat.getCurrencyInstance(Locale.getDefault()).format(amount)
+private val currencyFormat: NumberFormat
+    get() = NumberFormat.getCurrencyInstance(Locale.getDefault())
+
+fun formatCurrency(amount: Double): String = currencyFormat.format(amount)
+
+fun currencyPrefix(): String {
+    val formatted = currencyFormat.format(0)
+    return formatted.takeWhile { !it.isDigit() }.ifEmpty { "$" }
 }
 
 fun formatTransactionDate(timestamp: Long): String {
