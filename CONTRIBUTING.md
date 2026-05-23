@@ -1,24 +1,15 @@
 # Contributing to FlowFi
 
-## Quick PR workflow (solo / no review required)
-
-On your own fork or repo with an unprotected `master` branch:
+## Before opening a pull request
 
 ```bash
-git checkout master
-git pull origin master
-git checkout -b feature/your-change
-
-# make changes, then:
-git add .
-git commit -m "Your message"
-git push -u origin feature/your-change
-
-gh pr create --base master --head feature/your-change --title "Your PR title" --body "Summary of changes."
-gh pr merge --merge
-
-git checkout master
-git pull origin master
+./gradlew :app:testDebugUnitTest
+./gradlew :app:assembleDebug
 ```
 
-You can also open and merge the PR from the GitHub web UI without requesting reviewers.
+## Pull requests
+
+1. Branch from `master`.
+2. Keep changes focused (UI, ViewModel, Room data layer, or tests).
+3. Link related issues in the PR description when applicable (`Fixes #123`).
+4. Open the PR against `master`.
