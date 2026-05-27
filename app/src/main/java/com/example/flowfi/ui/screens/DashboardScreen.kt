@@ -2,6 +2,8 @@ package com.example.flowfi.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,7 +25,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.flowfi.data.entity.TransactionEntity
 import com.example.flowfi.data.entity.TransactionType
+import com.example.flowfi.ui.theme.ExpenseRed
+import com.example.flowfi.ui.theme.ExpenseRedContainer
+import com.example.flowfi.ui.theme.IncomeGreen
+import com.example.flowfi.ui.theme.IncomeGreenContainer
 import com.example.flowfi.ui.util.formatCurrency
+import com.example.flowfi.ui.util.formatCurrentMonthYear
 import com.example.flowfi.ui.util.formatTransactionDate
 import com.example.flowfi.viewmodel.TransactionViewModel
 
@@ -37,6 +44,7 @@ fun DashboardScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
                 title = { Text("FlowFi", fontWeight = FontWeight.Bold) },
@@ -106,8 +114,24 @@ fun DashboardScreen(
             Spacer(modifier = Modifier.height(8.dp))
             
             if (uiState.monthlyTransactions.isEmpty()) {
-                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("No transactions this month", style = MaterialTheme.typography.bodyLarge, color = Color.Gray)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "No transactions this month",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    FilledTonalButton(onClick = onNavigateToEntry) {
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Add transaction")
+                    }
                 }
             } else {
                 LazyColumn(
@@ -155,12 +179,22 @@ fun SummaryCard(balance: Double, income: Double, expenses: Double) {
             modifier = Modifier.padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Total Balance (This Month)", style = MaterialTheme.typography.labelLarge)
+            Text("Total Balance", style = MaterialTheme.typography.labelLarge)
+            Text(
+                text = formatCurrentMonthYear(),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = formatCurrency(balance),
                 style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
+                color = when {
+                    balance > 0 -> IncomeGreen
+                    balance < 0 -> ExpenseRed
+                    else -> MaterialTheme.colorScheme.onSecondaryContainer
+                }
             )
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -169,8 +203,8 @@ fun SummaryCard(balance: Double, income: Double, expenses: Double) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                SummaryItem(label = "Income", amount = income, icon = Icons.Default.ArrowUpward, color = Color(0xFF4CAF50))
-                SummaryItem(label = "Expenses", amount = expenses, icon = Icons.Default.ArrowDownward, color = Color(0xFFF44336))
+                SummaryItem(label = "Income", amount = income, icon = Icons.Default.ArrowUpward, color = IncomeGreen)
+                SummaryItem(label = "Expenses", amount = expenses, icon = Icons.Default.ArrowDownward, color = ExpenseRed)
             }
         }
     }
@@ -209,7 +243,7 @@ fun TransactionItem(
                         modifier = Modifier
                             .size(40.dp)
                             .background(
-                                color = if (transaction.type == TransactionType.INCOME) Color(0xFFE8F5E9) else Color(0xFFFFEBEE),
+                                color = if (transaction.type == TransactionType.INCOME) IncomeGreenContainer else ExpenseRedContainer,
                                 shape = RoundedCornerShape(12.dp)
                             ),
                         contentAlignment = Alignment.Center
@@ -217,7 +251,7 @@ fun TransactionItem(
                         Icon(
                             imageVector = if (transaction.type == TransactionType.INCOME) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
                             contentDescription = null,
-                            tint = if (transaction.type == TransactionType.INCOME) Color(0xFF4CAF50) else Color(0xFFF44336),
+                            tint = if (transaction.type == TransactionType.INCOME) IncomeGreen else ExpenseRed,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -232,7 +266,7 @@ fun TransactionItem(
                 Text(
                     text = (if (transaction.type == TransactionType.INCOME) "+" else "-") + formatCurrency(transaction.amount),
                     fontWeight = FontWeight.ExtraBold,
-                    color = if (transaction.type == TransactionType.INCOME) Color(0xFF4CAF50) else Color(0xFFF44336)
+                    color = if (transaction.type == TransactionType.INCOME) IncomeGreen else ExpenseRed
                 )
             }
             if (formattedDate != null) {
