@@ -1,6 +1,8 @@
 package com.example.flowfi.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -45,6 +47,7 @@ fun TransactionEntryScreen(
     val canSave = amountValue != null && amountValue > 0
 
     Scaffold(
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             TopAppBar(
                 title = { Text("Add Transaction", fontWeight = FontWeight.Bold) },
