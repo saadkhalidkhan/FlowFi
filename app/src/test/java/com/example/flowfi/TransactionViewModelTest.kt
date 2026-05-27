@@ -16,6 +16,11 @@ class TransactionViewModelTest {
     }
 
     @Test
+    fun formatCurrentMonthYear_isNotBlank() {
+        assertTrue(com.example.flowfi.ui.util.formatCurrentMonthYear().isNotBlank())
+    }
+
+    @Test
     fun currencyPrefix_isNotBlank() {
         assertTrue(com.example.flowfi.ui.util.currencyPrefix().isNotBlank())
     }

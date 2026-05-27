@@ -19,6 +19,10 @@ fun formatTransactionDate(timestamp: Long): String {
     return SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(timestamp))
 }
 
+fun formatCurrentMonthYear(): String {
+    return SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date())
+}
+
 fun isValidAmountInput(input: String): Boolean {
     if (input.isEmpty()) return true
     if (!Regex("""^\d*\.?\d{0,2}$""").matches(input)) return false
