@@ -23,6 +23,11 @@ fun formatCurrentMonthYear(): String {
     return SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date())
 }
 
+fun formatAmountForInput(amount: Double): String {
+    val raw = amount.toString()
+    return if (raw.endsWith(".0")) raw.dropLast(2) else raw
+}
+
 fun isValidAmountInput(input: String): Boolean {
     if (input.isEmpty()) return true
     if (!Regex("""^\d*\.?\d{0,2}$""").matches(input)) return false
