@@ -39,7 +39,8 @@ import com.example.flowfi.viewmodel.TransactionViewModel
 fun DashboardScreen(
     viewModel: TransactionViewModel,
     onNavigateToEntry: () -> Unit,
-    onNavigateToList: () -> Unit
+    onNavigateToList: () -> Unit,
+    onNavigateToEdit: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -142,7 +143,8 @@ fun DashboardScreen(
                     items(uiState.monthlyTransactions.take(5)) { transaction ->
                         TransactionItem(
                             transaction = transaction,
-                            formattedDate = formatTransactionDate(transaction.date)
+                            formattedDate = formatTransactionDate(transaction.date),
+                            onClick = { onNavigateToEdit(transaction.id) }
                         )
                     }
                 }
@@ -225,9 +227,11 @@ fun SummaryItem(label: String, amount: Double, icon: ImageVector, color: Color) 
 @Composable
 fun TransactionItem(
     transaction: TransactionEntity,
-    formattedDate: String? = null
+    formattedDate: String? = null,
+    onClick: () -> Unit
 ) {
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)

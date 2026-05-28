@@ -28,7 +28,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun TransactionListScreen(
     viewModel: TransactionViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToEdit: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -81,7 +82,7 @@ fun TransactionListScreen(
             ) {
                 item {
                     Text(
-                        text = "Swipe left on a transaction to delete",
+                        text = "Tap to edit · Swipe left to delete",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -126,7 +127,8 @@ fun TransactionListScreen(
                     ) {
                         TransactionItem(
                             transaction = transaction,
-                            formattedDate = formatTransactionDate(transaction.date)
+                            formattedDate = formatTransactionDate(transaction.date),
+                            onClick = { onNavigateToEdit(transaction.id) }
                         )
                     }
                 }
