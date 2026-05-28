@@ -16,6 +16,21 @@ class TransactionViewModelTest {
     }
 
     @Test
+    fun formatAmountForInput_stripsTrailingZero() {
+        assertEquals("42", com.example.flowfi.ui.util.formatAmountForInput(42.0))
+        assertEquals("12.5", com.example.flowfi.ui.util.formatAmountForInput(12.5))
+    }
+
+    @Test
+    fun transactionCategories_includesUnknownCategory() {
+        val options = com.example.flowfi.ui.model.TransactionCategories.optionsFor(
+            com.example.flowfi.data.entity.TransactionType.EXPENSE,
+            "Custom"
+        )
+        assertEquals("Custom", options.first())
+    }
+
+    @Test
     fun formatCurrentMonthYear_isNotBlank() {
         assertTrue(com.example.flowfi.ui.util.formatCurrentMonthYear().isNotBlank())
     }
