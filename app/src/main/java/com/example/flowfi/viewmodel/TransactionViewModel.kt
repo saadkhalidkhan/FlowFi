@@ -61,6 +61,12 @@ class TransactionViewModel(private val repository: TransactionRepository) : View
         }
     }
 
+    fun restoreTransaction(transaction: TransactionEntity) {
+        viewModelScope.launch {
+            repository.insertTransaction(transaction)
+        }
+    }
+
     private fun generateInsights(
         transactions: List<TransactionEntity>,
         income: Double,
