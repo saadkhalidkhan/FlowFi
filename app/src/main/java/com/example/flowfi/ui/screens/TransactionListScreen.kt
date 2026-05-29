@@ -95,9 +95,16 @@ fun TransactionListScreen(
                     val dismissState = rememberSwipeToDismissBoxState(
                         confirmValueChange = { value ->
                             if (value == SwipeToDismissBoxValue.EndToStart) {
-                                viewModel.deleteTransaction(transaction)
                                 scope.launch {
-                                    snackbarHostState.showSnackbar("Transaction deleted")
+                                    viewModel.deleteTransaction(transaction)
+                                    val result = snackbarHostState.showSnackbar(
+                                        message = "Transaction deleted",
+                                        actionLabel = "Undo",
+                                        duration = SnackbarDuration.Short
+                                    )
+                                    if (result == SnackbarResult.ActionPerformed) {
+                                        viewModel.restoreTransaction(transaction)
+                                    }
                                 }
                                 true
                             } else {
