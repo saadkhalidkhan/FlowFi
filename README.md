@@ -36,6 +36,9 @@ A fast, Material 3 personal finance app for tracking income and expenses. Built 
 ## Features
 
 - **Transaction tracking** — Record income and expenses with amount, category, date, and notes
+- **Edit transactions** — Tap any item on the dashboard or list to update it
+- **Delete with undo** — Swipe to delete on the list; tap Undo on the snackbar to restore
+- **List filters** — Narrow the full history by month and category
 - **Financial dashboard** — Balance, income, and expense totals with smart insights
 - **Transaction history** — Chronological list with dates
 - **Material 3 UI** — Dynamic color, light/dark themes, edge-to-edge layout
