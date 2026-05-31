@@ -2,6 +2,7 @@ package com.example.flowfi.ui.util
 
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -21,6 +22,15 @@ fun formatTransactionDate(timestamp: Long): String {
 
 fun formatCurrentMonthYear(): String {
     return SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date())
+}
+
+fun formatMonthYear(year: Int, month: Int): String {
+    val calendar = Calendar.getInstance().apply {
+        clear()
+        set(year, month, 1, 0, 0, 0)
+        set(Calendar.MILLISECOND, 0)
+    }
+    return SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(calendar.time)
 }
 
 fun formatAmountForInput(amount: Double): String {

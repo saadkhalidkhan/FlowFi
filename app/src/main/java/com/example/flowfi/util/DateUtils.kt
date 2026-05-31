@@ -24,4 +24,22 @@ object DateUtils {
 
         return start..end
     }
+
+    fun monthRangeMillis(year: Int, month: Int): LongRange {
+        val start = Calendar.getInstance().apply {
+            clear()
+            set(year, month, 1, 0, 0, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        val end = Calendar.getInstance().apply {
+            clear()
+            set(year, month, 1, 0, 0, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.MONTH, 1)
+            add(Calendar.MILLISECOND, -1)
+        }.timeInMillis
+
+        return start..end
+    }
 }
