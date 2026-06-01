@@ -33,7 +33,7 @@ class TransactionViewModelRestoreTest {
     @Test
     fun restoreTransaction_bringsBackDeletedItem() = runTest {
         val repository = FakeTransactionRepository()
-        val viewModel = TransactionViewModel(repository)
+        val viewModel = TransactionViewModel(repository, FakeSavingsGoalRepository())
         val transaction = TransactionEntity(
             amount = 25.0,
             category = "Food",

@@ -33,7 +33,10 @@ class MainActivity : ComponentActivity() {
             FlowFiTheme {
                 val application = application as FlowFiApplication
                 val viewModel: TransactionViewModel = viewModel(
-                    factory = TransactionViewModelFactory(application.repository)
+                    factory = TransactionViewModelFactory(
+                        application.repository,
+                        application.savingsGoalRepository
+                    )
                 )
                 
                 Surface(
