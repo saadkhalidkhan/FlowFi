@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.compose.rememberNavController
 import com.example.flowfi.ui.screens.DashboardScreen
+import com.example.flowfi.ui.screens.InsightsScreen
 import com.example.flowfi.ui.screens.TransactionEntryScreen
 import com.example.flowfi.ui.screens.TransactionListScreen
 import com.example.flowfi.viewmodel.TransactionViewModel
@@ -28,7 +29,14 @@ fun FlowFiNavHost(
                 onNavigateToList = { navController.navigate(Screen.TransactionList.route) },
                 onNavigateToEdit = { id ->
                     navController.navigate(Screen.editTransaction(id))
-                }
+                },
+                onNavigateToInsights = { navController.navigate(Screen.Insights.route) }
+            )
+        }
+        composable(Screen.Insights.route) {
+            InsightsScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
         composable(Screen.TransactionEntry.route) {

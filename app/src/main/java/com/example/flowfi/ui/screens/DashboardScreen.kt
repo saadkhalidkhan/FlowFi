@@ -12,7 +12,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -40,7 +40,8 @@ fun DashboardScreen(
     viewModel: TransactionViewModel,
     onNavigateToEntry: () -> Unit,
     onNavigateToList: () -> Unit,
-    onNavigateToEdit: (String) -> Unit
+    onNavigateToEdit: (String) -> Unit,
+    onNavigateToInsights: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -77,22 +78,14 @@ fun DashboardScreen(
                 expenses = uiState.totalExpenses
             )
             
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            if (uiState.insights.isNotEmpty()) {
-                Text(
-                    text = "Insights",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                uiState.insights.forEach { insight ->
-                    InsightCard(message = insight)
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
+
+            GuidancePreviewCard(
+                topInsight = uiState.behavioralInsights.firstOrNull(),
+                onViewInsights = onNavigateToInsights
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
             
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -154,18 +147,47 @@ fun DashboardScreen(
 }
 
 @Composable
-fun InsightCard(message: String) {
+private fun GuidancePreviewCard(
+    topInsight: com.example.flowfi.domain.BehavioralInsight?,
+    onViewInsights: () -> Unit
+) {
     Card(
+        onClick = onViewInsights,
         modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Default.Lightbulb, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(message, style = MaterialTheme.typography.bodyMedium)
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Guidance",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Icon(
+                    Icons.Default.Insights,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.tertiary
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = topInsight?.message
+                    ?: "Open insights for trends, category charts, and savings goals.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onTertiaryContainer
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "View insights →",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
