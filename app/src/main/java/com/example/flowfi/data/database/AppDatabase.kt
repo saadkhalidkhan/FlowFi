@@ -5,13 +5,20 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.example.flowfi.data.dao.SavingsGoalDao
 import com.example.flowfi.data.dao.TransactionDao
+import com.example.flowfi.data.entity.SavingsGoalEntity
 import com.example.flowfi.data.entity.TransactionEntity
 
-@Database(entities = [TransactionEntity::class], version = 1, exportSchema = false)
+@Database(
+    entities = [TransactionEntity::class, SavingsGoalEntity::class],
+    version = 2,
+    exportSchema = false
+)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
+    abstract fun savingsGoalDao(): SavingsGoalDao
 
     companion object {
         @Volatile
