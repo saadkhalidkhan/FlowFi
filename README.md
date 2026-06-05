@@ -9,7 +9,7 @@
 [![targetSdk](https://img.shields.io/badge/targetSdk-36-green)](app/build.gradle.kts)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?logo=android&logoColor=white)](https://developer.android.com/jetpack/compose)
 
-A fast, Material 3 personal finance app for tracking income and expenses. Built with Kotlin, Jetpack Compose, Room, and MVVM.
+A fast, Material 3 personal finance app that turns data into decisions — track spending, get behavioral guidance, and progress toward savings goals. Built with Kotlin, Jetpack Compose, Room, and MVVM.
 
 ## Demo
 
@@ -35,13 +35,29 @@ A fast, Material 3 personal finance app for tracking income and expenses. Built 
 
 ## Features
 
+### Transactions
 - **Transaction tracking** — Record income and expenses with amount, category, date, and notes
 - **Edit transactions** — Tap any item on the dashboard or list to update it
 - **Delete with undo** — Swipe to delete on the list; tap Undo on the snackbar to restore
 - **List filters** — Narrow the full history by month and category
-- **Financial dashboard** — Balance, income, and expense totals with smart insights
+- **Financial dashboard** — Monthly balance, income, and expense totals
 - **Transaction history** — Chronological list with dates
+
+### Insights & goals
+- **Insight engine** — Behavioral guidance such as week-over-week food spending, spending vs your monthly average, and savings rate trends
+- **Category analytics** — Monthly expense breakdown with percentage bars (Food, Shopping, Bills, and more)
+- **Savings goals** — Create goals (Emergency fund, Travel, etc.), add funds, and track progress visually
+- **Insights hub** — Open from the dashboard **Guidance** card for charts, insights, and goals in one place
+
+### Design
 - **Material 3 UI** — Dynamic color, light/dark themes, edge-to-edge layout
+
+## In the app
+
+1. **Dashboard** — See this month’s balance and a preview of your top insight; tap **Guidance** for the full Insights hub
+2. **Add / edit** — Use **+** or tap a transaction to record or update spending
+3. **View all** — Browse history, filter by month or category, swipe to delete (with Undo)
+4. **Insights** — Review guidance, category charts, and savings goal progress
 
 ## Installation
 
@@ -99,12 +115,38 @@ repository.getAllTransactions()
     }
 ```
 
-### Wire the repository in `Application`
+### Create a savings goal
+
+```kotlin
+import com.example.flowfi.data.entity.SavingsGoalEntity
+
+savingsGoalRepository.insertGoal(
+    SavingsGoalEntity(
+        name = "Emergency fund",
+        targetAmount = 5000.0,
+        currentAmount = 250.0
+    )
+)
+```
+
+### Generate behavioral insights
+
+```kotlin
+import com.example.flowfi.domain.InsightEngine
+
+val insights = InsightEngine.generate(transactions)
+insights.forEach { println(it.message) }
+```
+
+### Wire repositories in `Application`
 
 ```kotlin
 class FlowFiApplication : Application() {
     val database by lazy { AppDatabase.getDatabase(this) }
     val repository by lazy { TransactionRepositoryImpl(database.transactionDao()) }
+    val savingsGoalRepository by lazy {
+        SavingsGoalRepositoryImpl(database.savingsGoalDao())
+    }
 }
 ```
 
@@ -127,7 +169,12 @@ Published docs (GitHub Pages): **https://saadkhalidkhan.github.io/FlowFi/**
 
 ```
 FlowFi/
-├── app/                 # UI, ViewModel, Room data layer
+├── app/
+│   └── src/main/java/com/example/flowfi/
+│       ├── data/          # Room entities, DAOs, repositories
+│       ├── domain/        # InsightEngine, CategoryAnalytics
+│       ├── ui/            # Compose screens, theme, navigation
+│       └── viewmodel/     # MVVM state and actions
 ├── docs/
 │   ├── images/          # Screenshots
 │   └── media/           # Demo video
