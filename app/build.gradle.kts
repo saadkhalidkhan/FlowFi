@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.flowfi"
+    namespace = "com.saadproductlabs.mizafi"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.flowfi"
+        applicationId = "com.saadproductlabs.mizafi"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

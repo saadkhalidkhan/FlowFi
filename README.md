@@ -1,5 +1,7 @@
 # FlowFi
 
+> **Play Store branch:** App ships as **[Mizafi](PLAY_STORE.md)** (`com.saadproductlabs.mizafi`) by **Saad Product Labs**. This GitHub repo name stays **FlowFi**.
+
 [![CI](https://github.com/saadkhalidkhan/FlowFi/actions/workflows/ci.yml/badge.svg)](https://github.com/saadkhalidkhan/FlowFi/actions/workflows/ci.yml)
 [![Docs](https://github.com/saadkhalidkhan/FlowFi/actions/workflows/docs.yml/badge.svg)](https://github.com/saadkhalidkhan/FlowFi/actions/workflows/docs.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -73,7 +75,7 @@ Install on a device or emulator:
 
 ```bash
 ./gradlew :app:installDebug
-adb shell am start -n com.example.flowfi/.MainActivity
+adb shell am start -n com.saadproductlabs.mizafi/.MainActivity
 ```
 
 ## Usage examples
@@ -81,10 +83,10 @@ adb shell am start -n com.example.flowfi/.MainActivity
 ### Insert a transaction
 
 ```kotlin
-import com.example.flowfi.data.database.AppDatabase
-import com.example.flowfi.data.entity.TransactionEntity
-import com.example.flowfi.data.entity.TransactionType
-import com.example.flowfi.data.repository.TransactionRepositoryImpl
+import com.saadproductlabs.mizafi.data.database.AppDatabase
+import com.saadproductlabs.mizafi.data.entity.TransactionEntity
+import com.saadproductlabs.mizafi.data.entity.TransactionType
+import com.saadproductlabs.mizafi.data.repository.TransactionRepositoryImpl
 
 val repository = TransactionRepositoryImpl(
     AppDatabase.getDatabase(context).transactionDao()
@@ -104,7 +106,7 @@ repository.insertTransaction(
 ### Observe totals in a ViewModel
 
 ```kotlin
-import com.example.flowfi.data.entity.TransactionType
+import com.saadproductlabs.mizafi.data.entity.TransactionType
 import kotlinx.coroutines.flow.map
 
 repository.getAllTransactions()
@@ -118,7 +120,7 @@ repository.getAllTransactions()
 ### Create a savings goal
 
 ```kotlin
-import com.example.flowfi.data.entity.SavingsGoalEntity
+import com.saadproductlabs.mizafi.data.entity.SavingsGoalEntity
 
 savingsGoalRepository.insertGoal(
     SavingsGoalEntity(
@@ -132,7 +134,7 @@ savingsGoalRepository.insertGoal(
 ### Generate behavioral insights
 
 ```kotlin
-import com.example.flowfi.domain.InsightEngine
+import com.saadproductlabs.mizafi.domain.InsightEngine
 
 val insights = InsightEngine.generate(transactions)
 insights.forEach { println(it.message) }
@@ -141,7 +143,7 @@ insights.forEach { println(it.message) }
 ### Wire repositories in `Application`
 
 ```kotlin
-class FlowFiApplication : Application() {
+class MizafiApplication : Application() {
     val database by lazy { AppDatabase.getDatabase(this) }
     val repository by lazy { TransactionRepositoryImpl(database.transactionDao()) }
     val savingsGoalRepository by lazy {
@@ -170,7 +172,7 @@ Published docs (GitHub Pages): **https://saadkhalidkhan.github.io/FlowFi/**
 ```
 FlowFi/
 ├── app/
-│   └── src/main/java/com/example/flowfi/
+│       └── src/main/java/com/saadproductlabs/mizafi/
 │       ├── data/          # Room entities, DAOs, repositories
 │       ├── domain/        # InsightEngine, CategoryAnalytics
 │       ├── ui/            # Compose screens, theme, navigation

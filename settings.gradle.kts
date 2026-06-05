@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FlowFi"
+rootProject.name = "Mizafi"
 include(":app")
  
