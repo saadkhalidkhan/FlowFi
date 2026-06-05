@@ -1,4 +1,4 @@
 <resources>
 
-    <style name="Theme.FlowFi" parent="Theme.MaterialComponents.Light" />
+    <style name="Theme.Mizafi" parent="Theme.MaterialComponents.Light" />
 </resources>
