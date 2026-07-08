@@ -41,6 +41,14 @@ class TransactionViewModelTest {
     }
 
     @Test
+    fun validateAmountForSave_rejectsZeroAndInvalid() {
+        assertEquals(12.5, com.saadproductlabs.mizafi.ui.util.validateAmountForSave("12.5")!!, 0.0)
+        assertEquals(null, com.saadproductlabs.mizafi.ui.util.validateAmountForSave(""))
+        assertEquals(null, com.saadproductlabs.mizafi.ui.util.validateAmountForSave("0"))
+        assertEquals(null, com.saadproductlabs.mizafi.ui.util.validateAmountForSave("abc"))
+    }
+
+    @Test
     fun isValidAmountInput_rejectsInvalidPatterns() {
         assertTrue(com.saadproductlabs.mizafi.ui.util.isValidAmountInput("12.50"))
         assertTrue(com.saadproductlabs.mizafi.ui.util.isValidAmountInput(""))

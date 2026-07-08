@@ -44,3 +44,10 @@ fun isValidAmountInput(input: String): Boolean {
     val value = input.toDoubleOrNull() ?: return false
     return value >= 0
 }
+
+/** Returns parsed amount when valid for save, or null. */
+fun validateAmountForSave(input: String): Double? {
+    if (input.isBlank()) return null
+    val value = input.toDoubleOrNull() ?: return null
+    return if (value > 0) value else null
+}

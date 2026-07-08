@@ -1,3 +1,117 @@
 <resources>
     <string name="app_name">Mizafi</string>
+
+    <!-- Common actions and accessibility -->
+    <string name="cd_back">Back</string>
+    <string name="cd_add_transaction">Add transaction</string>
+    <string name="cd_delete">Delete</string>
+    <string name="cd_delete_transaction">Delete transaction</string>
+    <string name="cd_delete_goal">Delete goal</string>
+    <string name="cd_insights">Insights</string>
+    <string name="cd_view_all_transactions">View all transactions</string>
+    <string name="cd_view_insights">View insights and guidance</string>
+    <string name="cd_no_transactions">No transactions</string>
+    <string name="cd_empty_transaction_list">Empty transaction list</string>
+    <string name="cd_transaction_type">Transaction type</string>
+    <string name="cd_category_selected">%1$s, selected</string>
+    <string name="cd_category_not_selected">%1$s, not selected</string>
+    <string name="cd_positive_insight">Positive insight</string>
+    <string name="cd_warning_insight">Warning insight</string>
+    <string name="action_undo">Undo</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_add">Add</string>
+    <string name="action_add_funds">Add funds</string>
+    <string name="action_clear_filters">Clear filters</string>
+
+    <!-- Transaction entry -->
+    <string name="title_add_transaction">Add Transaction</string>
+    <string name="title_edit_transaction">Edit Transaction</string>
+    <string name="action_save_transaction">Save Transaction</string>
+    <string name="action_save_changes">Save Changes</string>
+    <string name="label_recorded_on">Recorded on</string>
+    <string name="label_expense">Expense</string>
+    <string name="label_income">Income</string>
+    <string name="label_amount">Amount</string>
+    <string name="label_category">Category</string>
+    <string name="category_food">Food</string>
+    <string name="category_transport">Transport</string>
+    <string name="category_bills">Bills</string>
+    <string name="category_shopping">Shopping</string>
+    <string name="category_salary">Salary</string>
+    <string name="category_other">Other</string>
+    <string name="label_notes_optional">Notes (Optional)</string>
+    <string name="error_amount_positive">Enter an amount greater than 0</string>
+    <string name="character_count">%1$d/200</string>
+
+    <!-- Dashboard -->
+    <string name="title_recent_transactions">Recent Transactions</string>
+    <string name="action_view_all">View All</string>
+    <string name="empty_month_title">No transactions this month</string>
+    <string name="empty_month_description">Track spending and income to see your balance update in real time.</string>
+    <string name="title_guidance">Guidance</string>
+    <string name="guidance_fallback">Open insights for trends, category charts, and savings goals.</string>
+    <string name="action_view_insights">View insights →</string>
+    <string name="label_total_balance">Total Balance</string>
+    <string name="label_positive_balance">Positive balance</string>
+    <string name="label_negative_balance">Negative balance</string>
+    <string name="label_even_balance">Even balance</string>
+    <string name="cd_balance_summary">%1$s, %2$s for %3$s</string>
+    <string name="label_expenses">Expenses</string>
+
+    <!-- Transaction list -->
+    <string name="title_all_transactions">All Transactions</string>
+    <string name="empty_transactions_title">No transactions yet</string>
+    <string name="empty_transactions_description">Tap + on the dashboard to record your first expense or income.</string>
+    <string name="transaction_list_hint">Tap to edit · Swipe left to delete</string>
+    <string name="empty_filters_title">No transactions match your filters</string>
+    <string name="empty_filters_description">Try adjusting the month or category filters.</string>
+    <string name="empty_filtered_list_title">No transactions to show</string>
+    <string name="empty_filtered_list_description">Your filtered list is empty.</string>
+    <string name="label_month">Month</string>
+    <string name="filter_all_months">All months</string>
+    <string name="filter_all_categories">All categories</string>
+
+    <!-- Insights and savings -->
+    <string name="title_insights">Insights</string>
+    <string name="action_new_goal">New goal</string>
+    <string name="cd_add_savings_goal">Add savings goal</string>
+    <string name="title_insight_engine">Insight engine</string>
+    <string name="subtitle_insight_engine">Guidance based on your spending patterns</string>
+    <string name="title_category_analytics">Category analytics</string>
+    <string name="title_savings_goals">Savings goals</string>
+    <string name="subtitle_savings_goals">Track progress toward what matters</string>
+    <string name="guidance_hero_title">Turn data into decisions</string>
+    <string name="guidance_hero_description">Mizafi highlights trends, category mix, and goal progress so you can act—not just read numbers.</string>
+    <string name="empty_analytics">No expense data this month yet. Add spending to see category breakdown.</string>
+    <string name="category_chart_value">%1$d%% · %2$s</string>
+    <string name="goal_saved_amount">%1$s of %2$s saved</string>
+    <string name="goal_progress">%1$d%% complete</string>
+    <string name="empty_goals_description">Set a goal for emergency savings, travel, or anything else.</string>
+    <string name="action_create_first_goal">Create your first goal</string>
+    <string name="title_new_savings_goal">New savings goal</string>
+    <string name="label_quick_picks">Quick picks</string>
+    <string name="label_goal_name">Goal name</string>
+    <string name="label_target_amount">Target amount</string>
+    <string name="title_add_to_goal">Add to %1$s</string>
+    <string name="goal_preset_emergency_fund">Emergency fund</string>
+    <string name="goal_preset_bike">Bike</string>
+    <string name="goal_preset_marriage">Marriage</string>
+    <string name="goal_preset_travel">Travel</string>
+
+    <!-- Operation feedback -->
+    <string name="msg_transaction_saved">Transaction saved</string>
+    <string name="msg_changes_saved">Changes saved</string>
+    <string name="msg_save_error">Couldn\'t save transaction. Please try again.</string>
+    <string name="msg_update_error">Couldn\'t update transaction. Please try again.</string>
+    <string name="msg_transaction_deleted">Transaction deleted</string>
+    <string name="msg_transaction_restored">Transaction restored</string>
+    <string name="msg_restore_transaction_error">Couldn\'t restore transaction.</string>
+    <string name="msg_goal_created">Goal created</string>
+    <string name="msg_create_goal_error">Couldn\'t create goal.</string>
+    <string name="msg_funds_added">Funds added</string>
+    <string name="msg_update_goal_error">Couldn\'t update goal.</string>
+    <string name="msg_goal_deleted">Goal deleted</string>
+    <string name="msg_goal_restored">Goal restored</string>
+    <string name="msg_restore_goal_error">Couldn\'t restore goal.</string>
 </resources>
