@@ -1,27 +1,67 @@
 package com.saadproductlabs.mizafi.ui.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.saadproductlabs.mizafi.R
 import com.saadproductlabs.mizafi.data.entity.TransactionEntity
 import com.saadproductlabs.mizafi.data.entity.TransactionType
+import com.saadproductlabs.mizafi.ui.components.CategoryChipSelector
 import com.saadproductlabs.mizafi.ui.model.TransactionCategories
 import com.saadproductlabs.mizafi.ui.util.currencyPrefix
 import com.saadproductlabs.mizafi.ui.util.formatAmountForInput
 import com.saadproductlabs.mizafi.ui.util.formatTransactionDate
 import com.saadproductlabs.mizafi.ui.util.isValidAmountInput
+import com.saadproductlabs.mizafi.ui.util.validateAmountForSave
 import com.saadproductlabs.mizafi.viewmodel.TransactionViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,24 +71,50 @@ fun TransactionEntryScreen(
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val existingTransaction = transactionId?.let { id ->
-        uiState.allTransactions.find { it.id == id }
-    }
-    val isEditMode = existingTransaction != null
+    val scope = rememberCoroutineScope()
+    val amountFocusRequester = remember { FocusRequester() }
+    val backDescription = stringResource(R.string.cd_back)
+    val transactionTypeDescription = stringResource(R.string.cd_transaction_type)
+    val expenseLabel = stringResource(R.string.label_expense)
+    val incomeLabel = stringResource(R.string.label_income)
+    val amountErrorMessage = stringResource(R.string.error_amount_positive)
 
-    var amount by remember(transactionId) {
-        mutableStateOf(existingTransaction?.let { formatAmountForInput(it.amount) } ?: "")
+    val existingTransaction = remember(transactionId, uiState.allTransactions) {
+        transactionId?.let { id -> uiState.allTransactions.find { it.id == id } }
     }
+    val isEditMode = transactionId != null
+
+    var amount by remember(transactionId) { mutableStateOf("") }
     var selectedCategory by remember(transactionId) {
-        mutableStateOf(existingTransaction?.category ?: TransactionCategories.expense.first())
+        mutableStateOf(TransactionCategories.expense.first())
     }
-    var type by remember(transactionId) {
-        mutableStateOf(existingTransaction?.type ?: TransactionType.EXPENSE)
+    var type by remember(transactionId) { mutableStateOf(TransactionType.EXPENSE) }
+    var note by remember(transactionId) { mutableStateOf("") }
+    var isSaving by remember { mutableStateOf(false) }
+    var showAmountError by remember { mutableStateOf(false) }
+
+    LaunchedEffect(existingTransaction) {
+        existingTransaction?.let { transaction ->
+            amount = formatAmountForInput(transaction.amount)
+            selectedCategory = transaction.category
+            type = transaction.type
+            note = transaction.note
+        }
     }
-    var note by remember(transactionId) {
-        mutableStateOf(existingTransaction?.note ?: "")
+
+    LaunchedEffect(transactionId, uiState.isDataReady, existingTransaction) {
+        if (transactionId != null && uiState.isDataReady && existingTransaction == null) {
+            onNavigateBack()
+        }
     }
-    var expanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        if (transactionId == null) {
+            // Wait until the text field's focus target is attached.
+            withFrameNanos { }
+            amountFocusRequester.requestFocus()
+        }
+    }
 
     val categories = remember(type, selectedCategory) {
         TransactionCategories.optionsFor(type, selectedCategory)
@@ -60,8 +126,11 @@ fun TransactionEntryScreen(
         }
     }
 
-    val amountValue = amount.toDoubleOrNull()
-    val canSave = amountValue != null && amountValue > 0
+    val canSave by remember {
+        derivedStateOf {
+            validateAmountForSave(amount) != null && !isSaving
+        }
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing,
@@ -69,13 +138,22 @@ fun TransactionEntryScreen(
             TopAppBar(
                 title = {
                     Text(
-                        if (isEditMode) "Edit Transaction" else "Add Transaction",
+                        stringResource(
+                            if (isEditMode) R.string.title_edit_transaction
+                            else R.string.title_add_transaction
+                        ),
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.semantics { contentDescription = backDescription }
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = backDescription
+                        )
                     }
                 }
             )
@@ -84,27 +162,36 @@ fun TransactionEntryScreen(
             Surface(tonalElevation = 3.dp) {
                 Button(
                     onClick = {
-                        if (isEditMode && existingTransaction != null) {
-                            viewModel.updateTransaction(
+                        val amountValue = validateAmountForSave(amount)
+                        if (amountValue == null) {
+                            showAmountError = true
+                            return@Button
+                        }
+                        scope.launch {
+                            isSaving = true
+                            val entity = if (isEditMode && existingTransaction != null) {
                                 existingTransaction.copy(
-                                    amount = amountValue!!,
+                                    amount = amountValue,
                                     category = selectedCategory,
                                     type = type,
                                     note = note.trim()
                                 )
-                            )
-                        } else {
-                            viewModel.addTransaction(
+                            } else {
                                 TransactionEntity(
-                                    amount = amountValue!!,
+                                    amount = amountValue,
                                     category = selectedCategory,
                                     date = System.currentTimeMillis(),
                                     type = type,
                                     note = note.trim()
                                 )
+                            }
+                            val success = viewModel.saveTransaction(
+                                transaction = entity,
+                                isUpdate = isEditMode && existingTransaction != null
                             )
+                            isSaving = false
+                            if (success) onNavigateBack()
                         }
-                        onNavigateBack()
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -113,10 +200,21 @@ fun TransactionEntryScreen(
                     shape = MaterialTheme.shapes.large,
                     enabled = canSave
                 ) {
-                    Text(
-                        if (isEditMode) "Save Changes" else "Save Transaction",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(22.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Text(
+                            stringResource(
+                                if (isEditMode) R.string.action_save_changes
+                                else R.string.action_save_transaction
+                            ),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
                 }
             }
         }
@@ -127,9 +225,9 @@ fun TransactionEntryScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             if (isEditMode && existingTransaction != null) {
                 Card(
@@ -140,7 +238,7 @@ fun TransactionEntryScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "Recorded on",
+                            text = stringResource(R.string.label_recorded_on),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -153,75 +251,71 @@ fun TransactionEntryScreen(
                 }
             }
 
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            SingleChoiceSegmentedButtonRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { contentDescription = transactionTypeDescription }
+            ) {
                 SegmentedButton(
                     selected = type == TransactionType.EXPENSE,
                     onClick = { type = TransactionType.EXPENSE },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                    modifier = Modifier.semantics { contentDescription = expenseLabel }
                 ) {
-                    Text("Expense")
+                    Text(expenseLabel)
                 }
                 SegmentedButton(
                     selected = type == TransactionType.INCOME,
                     onClick = { type = TransactionType.INCOME },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                    modifier = Modifier.semantics { contentDescription = incomeLabel }
                 ) {
-                    Text("Income")
+                    Text(incomeLabel)
                 }
             }
 
             OutlinedTextField(
                 value = amount,
-                onValueChange = { if (isValidAmountInput(it)) amount = it },
-                label = { Text("Amount") },
-                modifier = Modifier.fillMaxWidth(),
+                onValueChange = {
+                    if (isValidAmountInput(it)) {
+                        amount = it
+                        showAmountError = false
+                    }
+                },
+                label = { Text(stringResource(R.string.label_amount)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(amountFocusRequester),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
                 prefix = { Text("${currencyPrefix()} ") },
                 supportingText = {
-                    if (amount.isNotEmpty() && !canSave) {
-                        Text("Enter an amount greater than 0")
+                    if (
+                        showAmountError ||
+                        (amount.isNotEmpty() && validateAmountForSave(amount) == null)
+                    ) {
+                        Text(amountErrorMessage)
                     }
                 },
-                isError = amount.isNotEmpty() && !canSave
+                isError = showAmountError ||
+                    (amount.isNotEmpty() && validateAmountForSave(amount) == null)
             )
 
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                OutlinedTextField(
-                    value = selectedCategory,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Category") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
-                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    categories.forEach { category ->
-                        DropdownMenuItem(
-                            text = { Text(category) },
-                            onClick = {
-                                selectedCategory = category
-                                expanded = false
-                            }
-                        )
-                    }
-                }
-            }
+            CategoryChipSelector(
+                categories = categories,
+                selectedCategory = selectedCategory,
+                onCategorySelected = { selectedCategory = it }
+            )
 
             OutlinedTextField(
                 value = note,
-                onValueChange = { note = it },
-                label = { Text("Notes (Optional)") },
+                onValueChange = { if (it.length <= 200) note = it },
+                label = { Text(stringResource(R.string.label_notes_optional)) },
                 modifier = Modifier.fillMaxWidth(),
-                minLines = 3
+                minLines = 2,
+                supportingText = {
+                    Text(stringResource(R.string.character_count, note.length))
+                }
             )
 
             Spacer(modifier = Modifier.height(80.dp))
