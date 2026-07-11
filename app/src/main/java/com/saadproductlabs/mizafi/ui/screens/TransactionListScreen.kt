@@ -1,23 +1,62 @@
 package com.saadproductlabs.mizafi.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.saadproductlabs.mizafi.R
+import com.saadproductlabs.mizafi.ui.components.MizafiDropdownField
+import com.saadproductlabs.mizafi.ui.components.MizafiDropdownMenuItem
+import com.saadproductlabs.mizafi.ui.components.MizafiEmptyState
+import com.saadproductlabs.mizafi.ui.components.TransactionItem
+import com.saadproductlabs.mizafi.ui.model.MonthFilterOption
 import com.saadproductlabs.mizafi.ui.model.TransactionListFilters
 import com.saadproductlabs.mizafi.ui.theme.ExpenseRed
+import com.saadproductlabs.mizafi.ui.util.categoryDisplayName
 import com.saadproductlabs.mizafi.ui.util.formatTransactionDate
 import com.saadproductlabs.mizafi.viewmodel.TransactionViewModel
 import kotlinx.coroutines.launch
@@ -32,6 +71,10 @@ fun TransactionListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val transactionDeletedMessage = stringResource(R.string.msg_transaction_deleted)
+    val undoLabel = stringResource(R.string.action_undo)
+    val deleteTransactionDescription = stringResource(R.string.cd_delete_transaction)
+    val deleteDescription = stringResource(R.string.cd_delete)
     var selectedMonthKey by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedCategory by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -41,19 +84,24 @@ fun TransactionListScreen(
     val categoryOptions = remember(uiState.allTransactions) {
         TransactionListFilters.categoryOptions(uiState.allTransactions)
     }
-    val filteredTransactions = remember(
-        uiState.allTransactions,
-        selectedMonthKey,
-        selectedCategory
-    ) {
-        TransactionListFilters.filter(uiState.allTransactions, selectedMonthKey, selectedCategory)
+    val filteredTransactions by remember {
+        derivedStateOf {
+            TransactionListFilters.filter(
+                uiState.allTransactions,
+                selectedMonthKey,
+                selectedCategory
+            )
+        }
     }
-    val selectedMonthLabel = remember(selectedMonthKey, monthOptions) {
-        monthOptions.find { it.key == selectedMonthKey }?.label
-            ?: TransactionListFilters.ALL_MONTHS_LABEL
+    val selectedMonthLabel = monthOptions.find { it.key == selectedMonthKey }?.label
+        ?: stringResource(R.string.filter_all_months)
+    val selectedCategoryLabel = selectedCategory?.let { categoryDisplayName(it) }
+        ?: stringResource(R.string.filter_all_categories)
+    val filtersActive by remember {
+        derivedStateOf {
+            selectedMonthKey != null || selectedCategory != null
+        }
     }
-    val selectedCategoryLabel = selectedCategory ?: TransactionListFilters.ALL_CATEGORIES_LABEL
-    val filtersActive = selectedMonthKey != null || selectedCategory != null
 
     LaunchedEffect(monthOptions, selectedMonthKey) {
         if (selectedMonthKey != null && monthOptions.none { it.key == selectedMonthKey }) {
@@ -71,52 +119,60 @@ fun TransactionListScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("All Transactions", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        stringResource(R.string.title_all_transactions),
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back)
+                        )
                     }
                 }
             )
         }
     ) { innerPadding ->
+        if (!uiState.isDataReady) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.material3.CircularProgressIndicator()
+            }
+            return@Scaffold
+        }
+
         if (uiState.allTransactions.isEmpty()) {
-            Column(
+            MizafiEmptyState(
+                title = stringResource(R.string.empty_transactions_title),
+                description = stringResource(R.string.empty_transactions_description),
+                icon = Icons.Default.ReceiptLong,
+                iconContentDescription = stringResource(R.string.cd_empty_transaction_list),
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "No transactions yet",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Go back and tap + on the dashboard to add your first transaction.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
-            }
+            )
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 16.dp)
             ) {
                 item {
                     Text(
-                        text = "Tap to edit · Swipe left to delete",
+                        text = stringResource(R.string.transaction_list_hint),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier.padding(bottom = 4.dp)
                     )
                 }
                 item {
@@ -131,11 +187,29 @@ fun TransactionListScreen(
                 }
                 if (filteredTransactions.isEmpty()) {
                     item {
-                        FilterEmptyState(
-                            filtersActive = filtersActive,
-                            onClearFilters = {
-                                selectedMonthKey = null
-                                selectedCategory = null
+                        MizafiEmptyState(
+                            title = if (filtersActive) {
+                                stringResource(R.string.empty_filters_title)
+                            } else {
+                                stringResource(R.string.empty_filtered_list_title)
+                            },
+                            description = if (filtersActive) {
+                                stringResource(R.string.empty_filters_description)
+                            } else {
+                                stringResource(R.string.empty_filtered_list_description)
+                            },
+                            secondaryActionLabel = if (filtersActive) {
+                                stringResource(R.string.action_clear_filters)
+                            } else {
+                                null
+                            },
+                            onSecondaryAction = if (filtersActive) {
+                                {
+                                    selectedMonthKey = null
+                                    selectedCategory = null
+                                }
+                            } else {
+                                null
                             }
                         )
                     }
@@ -150,8 +224,8 @@ fun TransactionListScreen(
                                     scope.launch {
                                         viewModel.deleteTransaction(transaction)
                                         val result = snackbarHostState.showSnackbar(
-                                            message = "Transaction deleted",
-                                            actionLabel = "Undo",
+                                            message = transactionDeletedMessage,
+                                            actionLabel = undoLabel,
                                             duration = SnackbarDuration.Short
                                         )
                                         if (result == SnackbarResult.ActionPerformed) {
@@ -173,12 +247,15 @@ fun TransactionListScreen(
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .background(ExpenseRed, MaterialTheme.shapes.large)
-                                        .padding(horizontal = 20.dp),
+                                        .padding(horizontal = 20.dp)
+                                        .semantics {
+                                            contentDescription = deleteTransactionDescription
+                                        },
                                     contentAlignment = Alignment.CenterEnd
                                 ) {
                                     Icon(
                                         Icons.Default.Delete,
-                                        contentDescription = "Delete",
+                                        contentDescription = deleteDescription,
                                         tint = Color.White
                                     )
                                 }
@@ -202,7 +279,7 @@ fun TransactionListScreen(
 private fun TransactionFilterFields(
     selectedMonthLabel: String,
     selectedCategoryLabel: String,
-    monthOptions: List<com.saadproductlabs.mizafi.ui.model.MonthFilterOption>,
+    monthOptions: List<MonthFilterOption>,
     categoryOptions: List<String>,
     onMonthSelected: (String?) -> Unit,
     onCategorySelected: (String?) -> Unit
@@ -211,23 +288,23 @@ private fun TransactionFilterFields(
     var categoryExpanded by remember { mutableStateOf(false) }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterDropdownField(
-            label = "Month",
+        MizafiDropdownField(
+            label = stringResource(R.string.label_month),
             value = selectedMonthLabel,
             expanded = monthExpanded,
             onExpandedChange = { monthExpanded = it },
             onDismiss = { monthExpanded = false }
         ) {
-            DropdownMenuItem(
-                text = { Text(TransactionListFilters.ALL_MONTHS_LABEL) },
+            MizafiDropdownMenuItem(
+                text = stringResource(R.string.filter_all_months),
                 onClick = {
                     onMonthSelected(null)
                     monthExpanded = false
                 }
             )
             monthOptions.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(option.label) },
+                MizafiDropdownMenuItem(
+                    text = option.label,
                     onClick = {
                         onMonthSelected(option.key)
                         monthExpanded = false
@@ -235,92 +312,28 @@ private fun TransactionFilterFields(
                 )
             }
         }
-        FilterDropdownField(
-            label = "Category",
+        MizafiDropdownField(
+            label = stringResource(R.string.label_category),
             value = selectedCategoryLabel,
             expanded = categoryExpanded,
             onExpandedChange = { categoryExpanded = it },
             onDismiss = { categoryExpanded = false }
         ) {
-            DropdownMenuItem(
-                text = { Text(TransactionListFilters.ALL_CATEGORIES_LABEL) },
+            MizafiDropdownMenuItem(
+                text = stringResource(R.string.filter_all_categories),
                 onClick = {
                     onCategorySelected(null)
                     categoryExpanded = false
                 }
             )
             categoryOptions.forEach { category ->
-                DropdownMenuItem(
-                    text = { Text(category) },
+                MizafiDropdownMenuItem(
+                    text = categoryDisplayName(category),
                     onClick = {
                         onCategorySelected(category)
                         categoryExpanded = false
                     }
                 )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FilterDropdownField(
-    label: String,
-    value: String,
-    expanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
-    onDismiss: () -> Unit,
-    menuContent: @Composable ColumnScope.() -> Unit
-) {
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = onExpandedChange,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true),
-            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = onDismiss,
-            content = menuContent
-        )
-    }
-}
-
-@Composable
-private fun FilterEmptyState(
-    filtersActive: Boolean,
-    onClearFilters: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = if (filtersActive) {
-                "No transactions match your filters"
-            } else {
-                "No transactions to show"
-            },
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center
-        )
-        if (filtersActive) {
-            Spacer(modifier = Modifier.height(8.dp))
-            TextButton(onClick = onClearFilters) {
-                Text("Clear filters")
             }
         }
     }
