@@ -10,9 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.saadproductlabs.mizafi.R
 import com.saadproductlabs.mizafi.domain.CategorySpend
+import com.saadproductlabs.mizafi.ui.util.categoryDisplayName
 import com.saadproductlabs.mizafi.ui.util.formatCurrency
 
 @Composable
@@ -48,9 +51,17 @@ private fun CategoryBarRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(category, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
             Text(
-                text = "${percent.toInt()}% · ${formatCurrency(amount)}",
+                categoryDisplayName(category),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = stringResource(
+                    R.string.category_chart_value,
+                    percent.toInt(),
+                    formatCurrency(amount)
+                ),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

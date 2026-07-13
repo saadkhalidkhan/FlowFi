@@ -17,16 +17,25 @@ import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.saadproductlabs.mizafi.R
 import com.saadproductlabs.mizafi.data.entity.SavingsGoalEntity
 import com.saadproductlabs.mizafi.domain.BehavioralInsight
 import com.saadproductlabs.mizafi.domain.InsightTone
@@ -38,9 +47,9 @@ import com.saadproductlabs.mizafi.ui.theme.IncomeGreenContainer
 import com.saadproductlabs.mizafi.ui.util.formatCurrency
 import com.saadproductlabs.mizafi.ui.util.formatCurrentMonthYear
 import com.saadproductlabs.mizafi.ui.util.isValidAmountInput
+import com.saadproductlabs.mizafi.ui.util.validateAmountForSave
 import com.saadproductlabs.mizafi.viewmodel.TransactionViewModel
-
-private val goalPresets = listOf("Emergency fund", "Bike", "Marriage", "Travel")
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +58,10 @@ fun InsightsScreen(
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val goalDeletedMessage = stringResource(R.string.msg_goal_deleted)
+    val undoLabel = stringResource(R.string.action_undo)
     var showAddGoalDialog by remember { mutableStateOf(false) }
     var goalToFund by remember { mutableStateOf<SavingsGoalEntity?>(null) }
 
@@ -63,12 +76,21 @@ fun InsightsScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Insights", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        stringResource(R.string.title_insights),
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.cd_back)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -80,8 +102,13 @@ fun InsightsScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { showAddGoalDialog = true },
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("New goal") },
+                icon = {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(R.string.cd_add_savings_goal)
+                    )
+                },
+                text = { Text(stringResource(R.string.action_new_goal)) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )
@@ -101,8 +128,8 @@ fun InsightsScreen(
 
             item {
                 SectionHeader(
-                    title = "Insight engine",
-                    subtitle = "Guidance based on your spending patterns",
+                    title = stringResource(R.string.title_insight_engine),
+                    subtitle = stringResource(R.string.subtitle_insight_engine),
                     icon = Icons.Default.Lightbulb
                 )
             }
@@ -112,7 +139,7 @@ fun InsightsScreen(
 
             item {
                 SectionHeader(
-                    title = "Category analytics",
+                    title = stringResource(R.string.title_category_analytics),
                     subtitle = formatCurrentMonthYear(),
                     icon = Icons.Default.PieChart
                 )
@@ -126,8 +153,8 @@ fun InsightsScreen(
 
             item {
                 SectionHeader(
-                    title = "Savings goals",
-                    subtitle = "Track progress toward what matters",
+                    title = stringResource(R.string.title_savings_goals),
+                    subtitle = stringResource(R.string.subtitle_savings_goals),
                     icon = Icons.Default.Savings
                 )
             }
@@ -140,7 +167,19 @@ fun InsightsScreen(
                     SavingsGoalCard(
                         goal = goal,
                         onAddFunds = { goalToFund = goal },
-                        onDelete = { viewModel.deleteSavingsGoal(goal) }
+                        onDelete = {
+                            scope.launch {
+                                viewModel.deleteSavingsGoal(goal)
+                                val result = snackbarHostState.showSnackbar(
+                                    message = goalDeletedMessage,
+                                    actionLabel = undoLabel,
+                                    duration = SnackbarDuration.Short
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    viewModel.restoreSavingsGoal(goal)
+                                }
+                            }
+                        }
                     )
                 }
             }
@@ -180,14 +219,14 @@ private fun GuidanceHeroCard() {
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(
-                text = "Turn data into decisions",
+                text = stringResource(R.string.guidance_hero_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSecondaryContainer
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Mizafi highlights trends, category mix, and goal progress so you can act—not just read numbers.",
+                text = stringResource(R.string.guidance_hero_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f)
             )
@@ -204,7 +243,7 @@ private fun SectionHeader(
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             imageVector = icon,
-            contentDescription = null,
+            contentDescription = title,
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(22.dp)
         )
@@ -238,6 +277,12 @@ fun BehavioralInsightCard(insight: BehavioralInsight) {
         InsightTone.NEUTRAL -> Icons.Default.Lightbulb
     }
 
+    val iconDescription = when (insight.tone) {
+        InsightTone.POSITIVE -> stringResource(R.string.cd_positive_insight)
+        InsightTone.WARNING -> stringResource(R.string.cd_warning_insight)
+        InsightTone.NEUTRAL -> stringResource(R.string.cd_insights)
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -247,7 +292,7 @@ fun BehavioralInsightCard(insight: BehavioralInsight) {
             modifier = Modifier.padding(14.dp),
             verticalAlignment = Alignment.Top
         ) {
-            Icon(icon, contentDescription = null, tint = contentColor)
+            Icon(icon, contentDescription = iconDescription, tint = contentColor)
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = insight.message,
@@ -271,7 +316,7 @@ private fun AnalyticsCard(
         Column(modifier = Modifier.padding(18.dp)) {
             if (breakdown.isEmpty()) {
                 Text(
-                    text = "No expense data this month yet. Add spending to see category breakdown.",
+                    text = stringResource(R.string.empty_analytics),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -305,7 +350,7 @@ private fun SavingsGoalCard(
                 IconButton(onClick = onDelete) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Delete goal",
+                        contentDescription = stringResource(R.string.cd_delete_goal),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -322,19 +367,26 @@ private fun SavingsGoalCard(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "${formatCurrency(goal.currentAmount)} of ${formatCurrency(goal.targetAmount)} saved",
+                text = stringResource(
+                    R.string.goal_saved_amount,
+                    formatCurrency(goal.currentAmount),
+                    formatCurrency(goal.targetAmount)
+                ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "${(goal.progress * 100).toInt()}% complete",
+                text = stringResource(
+                    R.string.goal_progress,
+                    (goal.progress * 100).toInt()
+                ),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = IncomeGreen
             )
             Spacer(modifier = Modifier.height(12.dp))
             FilledTonalButton(onClick = onAddFunds, modifier = Modifier.fillMaxWidth()) {
-                Text("Add funds")
+                Text(stringResource(R.string.action_add_funds))
             }
         }
     }
@@ -354,14 +406,14 @@ private fun EmptyGoalsCard(onAddGoal: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Set a goal for emergency savings, travel, or anything else.",
+                text = stringResource(R.string.empty_goals_description),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(12.dp))
             FilledTonalButton(onClick = onAddGoal) {
-                Text("Create your first goal")
+                Text(stringResource(R.string.action_create_first_goal))
             }
         }
     }
@@ -374,15 +426,21 @@ private fun AddSavingsGoalDialog(
 ) {
     var name by remember { mutableStateOf("") }
     var target by remember { mutableStateOf("") }
-    val canSave = name.isNotBlank() && (target.toDoubleOrNull() ?: 0.0) > 0
+    val canSave = name.isNotBlank() && validateAmountForSave(target) != null
+    val goalPresets = listOf(
+        stringResource(R.string.goal_preset_emergency_fund),
+        stringResource(R.string.goal_preset_bike),
+        stringResource(R.string.goal_preset_marriage),
+        stringResource(R.string.goal_preset_travel)
+    )
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("New savings goal") },
+        title = { Text(stringResource(R.string.title_new_savings_goal)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    "Quick picks",
+                    stringResource(R.string.label_quick_picks),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -398,14 +456,14 @@ private fun AddSavingsGoalDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Goal name") },
+                    label = { Text(stringResource(R.string.label_goal_name)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = target,
                     onValueChange = { if (isValidAmountInput(it)) target = it },
-                    label = { Text("Target amount") },
+                    label = { Text(stringResource(R.string.label_target_amount)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true
@@ -418,18 +476,18 @@ private fun AddSavingsGoalDialog(
                     onSave(
                         SavingsGoalEntity(
                             name = name.trim(),
-                            targetAmount = target.toDouble()
+                            targetAmount = validateAmountForSave(target)!!
                         )
                     )
                 },
                 enabled = canSave
             ) {
-                Text("Save")
+                Text(stringResource(R.string.action_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     )
@@ -442,17 +500,17 @@ private fun AddFundsDialog(
     onConfirm: (Double) -> Unit
 ) {
     var amount by remember { mutableStateOf("") }
-    val value = amount.toDoubleOrNull()
-    val canConfirm = value != null && value > 0
+    val value = validateAmountForSave(amount)
+    val canConfirm = value != null
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add to $goalName") },
+        title = { Text(stringResource(R.string.title_add_to_goal, goalName)) },
         text = {
             OutlinedTextField(
                 value = amount,
                 onValueChange = { if (isValidAmountInput(it)) amount = it },
-                label = { Text("Amount") },
+                label = { Text(stringResource(R.string.label_amount)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true
@@ -460,12 +518,12 @@ private fun AddFundsDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(value!!) }, enabled = canConfirm) {
-                Text("Add")
+                Text(stringResource(R.string.action_add))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     )
